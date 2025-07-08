@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airline Data Analytics Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: var(--card-shadow);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            font-weight: bold;
+            border-radius: 10px 10px 0 0 !important;
+        }
+
+        .btn-primary {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            min-height: 400px;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-number {
+                font-size: 2rem;
+            }
+            
+            .main-header {
+                padding: 1rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-plane"></i> Airline Analytics
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#insights">Insights</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#data">Data</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1><i class="fas fa-chart-line"></i> Airline Data Analytics Dashboard</h1>
+                    <p class="lead">Real-time insights into airline booking trends, popular routes, and market demand</p>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <i class="fas fa-globe fa-5x opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Error/Success Messages -->
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading airline data...</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filter-section">
+            <h4><i class="fas fa-filter"></i> Filter Data</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="fromAirport" class="form-label">From Airport (IATA Code)</label>
+                    <input type="text" class="form-control" id="fromAirport" placeholder="e.g., JFK">
+                    <small class="form-text text-muted">3-letter airport code</small>
+                </div>
+                <div class="col-md-4">
+                    <label for="toAirport" class="form-label">To Airport (IATA Code)</label>
+                    <input type="text" class="form-control" id="toAirport" placeholder="e.g., LAX">
+                    <small class="form-text text-muted">3-letter airport code</small>
+                </div>
+                <div class="col-md-4">
+                    <label for="dataLimit" class="form-label">Data Limit</label>
+                    <select class="form-select" id="dataLimit">
+                        <option value="10">10 flights</option>
+                        <option value="25">25 flights</option>
+                        <option value="50" selected>50 flights</option>
+                        <option value="100">100 flights</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button class="btn btn-primary btn-lg" onclick="loadData()">
+                        <i class="fas fa-sync-alt"></i> Load Data
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg ms-2" onclick="clearFilters()">
+                        <i class="fas fa-eraser"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row" id="stats-section">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-flights">0</div>
+                    <div>Total Flights</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-routes">0</div>
+                    <div>Unique Routes</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-airlines">0</div>
+                    <div>Airlines</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-airports">0</div>
+                    <div>Airports</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-route"></i> Most Popular Routes</h5>
+                    <div id="popular-routes-chart"></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-plane-departure"></i> Airline Distribution</h5>
+                    <div id="airline-distribution-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-clock"></i> Peak Flight Times</h5>
+                    <div id="peak-times-chart"></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-map-marker-alt"></i> Airport Activity</h5>
+                    <div id="airport-activity-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Section -->
+        <div class="row" id="insights">
+            <div class="col-12">
+                <h4><i class="fas fa-lightbulb"></i> Key Insights</h4>
+            </div>
+            <div class="col-lg-4">
+                <div class="insight-card">
+                    <h6><i class="fas fa-trophy"></i> Top Route</h6>
+                    <p id="top-route">Loading...</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="insight-card">
+                    <h6><i class="fas fa-star"></i> Leading Airline</h6>
+                    <p id="leading-airline">Loading...</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="insight-card">
+                    <h6><i class="fas fa-clock"></i> Peak Hour</h6>
+                    <p id="peak-hour">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="row" id="data">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-table"></i> Flight Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="flights-table">
+                                <thead>
+                                    <tr>
+                                        <th>Flight</th>
+                                        <th>Airline</th>
+                                        <th>Route</th>
+                                        <th>Departure</th>
+                                        <th>Arrival</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="flights-table-body">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Airline Analytics Dashboard. Built with Flask, Python, and modern web technologies.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentData = null;
+        let currentInsights = null;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+
+        // Main function to load data
+        async function loadData() {
+            showLoading(true);
+            hideMessages();
+
+            try {
+                const fromAirport = document.getElementById('fromAirport').value;
+                const toAirport = document.getElementById('toAirport').value;
+                const limit = document.getElementById('dataLimit').value;
+
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (fromAirport) params.append('from', fromAirport);
+                if (toAirport) params.append('to', toAirport);
+                params.append('limit', limit);
+
+                // Fetch data
+                const response = await fetch(`/api/data?${params}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    currentData = data.raw_data;
+                    currentInsights = data.insights;
+                    
+                    updateStatistics();
+                    updateCharts();
+                    updateInsights();
+                    updateTable();
+                    
+                    showSuccess('Data loaded successfully!');
+                } else {
+                    showError('Failed to load data. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('An error occurred while loading data.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update statistics cards
+        function updateStatistics() {
+            if (!currentInsights) return;
+
+            document.getElementById('total-flights').textContent = currentInsights.total_flights || 0;
+            document.getElementById('total-routes').textContent = Object.keys(currentInsights.popular_routes || {}).length;
+            document.getElementById('total-airlines').textContent = Object.keys(currentInsights.airline_distribution || {}).length;
+            document.getElementById('total-airports').textContent = Object.keys(currentInsights.airport_activity || {}).length;
+        }
+
+        // Update charts
+        function updateCharts() {
+            if (!currentInsights) return;
+
+            // Popular routes chart
+            if (currentInsights.popular_routes) {
+                const routes = Object.keys(currentInsights.popular_routes);
+                const counts = Object.values(currentInsights.popular_routes);
+                
+                const routesData = [{
+                    x: routes,
+                    y: counts,
+                    type: 'bar',
+                    marker: {
+                        color: '#3498db'
+                    }
+                }];
+
+                const routesLayout = {
+                    title: 'Most Popular Routes',
+                    xaxis: { title: 'Route' },
+                    yaxis: { title: 'Number of Flights' }
+                };
+
+                Plotly.newPlot('popular-routes-chart', routesData, routesLayout);
+            }
+
+            // Airline distribution chart
+            if (currentInsights.airline_distribution) {
+                const airlines = Object.keys(currentInsights.airline_distribution);
+                const counts = Object.values(currentInsights.airline_distribution);
+                
+                const airlineData = [{
+                    labels: airlines,
+                    values: counts,
+                    type: 'pie',
+                    textinfo: 'label+percent',
+                    textposition: 'outside'
+                }];
+
+                const airlineLayout = {
+                    title: 'Airline Distribution'
+                };
+
+                Plotly.newPlot('airline-distribution-chart', airlineData, airlineLayout);
+            }
+
+            // Peak times chart
+            if (currentInsights.peak_times) {
+                const hours = Object.keys(currentInsights.peak_times).map(h => parseInt(h));
+                const counts = Object.values(currentInsights.peak_times);
+                
+                const peakData = [{
+                    x: hours,
+                    y: counts,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: {
+                        color: '#e74c3c'
+                    }
+                }];
+
+                const peakLayout = {
+                    title: 'Peak Flight Times',
+                    xaxis: { title: 'Hour of Day' },
+                    yaxis: { title: 'Number of Flights' }
+                };
+
+                Plotly.newPlot('peak-times-chart', peakData, peakLayout);
+            }
+
+            // Airport activity chart
+            if (currentInsights.airport_activity) {
+                const airports = Object.keys(currentInsights.airport_activity);
+                const counts = Object.values(currentInsights.airport_activity);
+                
+                const airportData = [{
+                    x: airports,
+                    y: counts,
+                    type: 'bar',
+                    marker: {
+                        color: '#2ecc71'
+                    }
+                }];
+
+                const airportLayout = {
+                    title: 'Airport Activity',
+                    xaxis: { title: 'Airport' },
+                    yaxis: { title: 'Number of Flights' }
+                };
+
+                Plotly.newPlot('airport-activity-chart', airportData, airportLayout);
+            }
+        }
+
+        // Update insights
+        function updateInsights() {
+            if (!currentInsights) return;
+
+            // Top route
+            const topRoute = Object.keys(currentInsights.popular_routes || {})[0];
+            document.getElementById('top-route').textContent = topRoute || 'No data available';
+
+            // Leading airline
+            const leadingAirline = Object.keys(currentInsights.airline_distribution || {})[0];
+            document.getElementById('leading-airline').textContent = leadingAirline || 'No data available';
+
+            // Peak hour
+            const peakHour = Object.keys(currentInsights.peak_times || {})[0];
+            document.getElementById('peak-hour').textContent = peakHour ? `${peakHour}:00` : 'No data available';
+        }
+
+        // Update table
+        function updateTable() {
+            if (!currentData || !currentData.data) return;
+
+            const tableBody = document.getElementById('flights-table-body');
+            tableBody.innerHTML = '';
+
+            currentData.data.forEach(flight => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${flight.flight?.iata || 'N/A'}</td>
+                    <td>${flight.airline?.name || 'N/A'}</td>
+                    <td>${flight.departure?.iata || 'N/A'} → ${flight.arrival?.iata || 'N/A'}</td>
+                    <td>${flight.departure?.scheduled ? new Date(flight.departure.scheduled).toLocaleString() : 'N/A'}</td>
+                    <td>${flight.arrival?.scheduled ? new Date(flight.arrival.scheduled).toLocaleString() : 'N/A'}</td>
+                    <td>
+                        <span class="badge ${flight.flight_status === 'scheduled' ? 'bg-success' : 'bg-warning'}">
+                            ${flight.flight_status || 'Unknown'}
+                        </span>
+                    </td>
+                `;
+            });
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('fromAirport').value = '';
+            document.getElementById('toAirport').value = '';
+            document.getElementById('dataLimit').value = '50';
+            loadData();
+        }
+
+        // Show/hide loading spinner
+        function showLoading(show) {
+            const spinner = document.getElementById('loading-spinner');
+            spinner.style.display = show ? 'block' : 'none';
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Hide messages
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
