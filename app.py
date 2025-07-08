@@ -651,4 +651,10 @@ def get_charts():
     return jsonify(charts)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=8080) 
+    # For deployment, use environment variables for host and port
+    import os
+    host = os.environ.get('HOST', '127.0.0.1')
+    port = int(os.environ.get('PORT', 8080))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
+    app.run(debug=debug, host=host, port=port) 
